@@ -1,5 +1,7 @@
 import type { GameConfig } from "./GameConfig";
 
+export type GameOverReason = "time_up" | "out_of_lives";
+
 export class GameState {
   public readonly config: GameConfig;
 
@@ -11,7 +13,7 @@ export class GameState {
   public onScoreChanged?: (score: number) => void;
   public onLivesChanged?: (lives: number) => void;
   public onTimeChanged?: (timeLeft: number) => void;
-  public onGameOver?: () => void;
+  public onGameOver?: (reason: GameOverReason) => void;
 
   constructor(config: GameConfig) {
     this.config = config;
@@ -35,7 +37,7 @@ export class GameState {
     }
 
     if (this.lives <= 0) {
-      this.setGameOver();
+      this.setGameOver("out_of_lives");
     }
   }
 
@@ -51,11 +53,11 @@ export class GameState {
     }
 
     if (this.timeLeft <= 0) {
-      this.setGameOver();
+      this.setGameOver("time_up");
     }
   }
 
-  private setGameOver(): void {
+  private setGameOver(reason: GameOverReason): void {
     if (this.isGameOver) {
       return;
     }
@@ -63,7 +65,7 @@ export class GameState {
     this.isGameOver = true;
 
     if (this.onGameOver) {
-      this.onGameOver();
+      this.onGameOver(reason);
     }
   }
 }

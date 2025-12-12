@@ -16,7 +16,7 @@ export class SoundSystem {
   }
 
   public update(): void {
-    // no-op for now; reserved for future pooling or queued sounds
+    // Reserved for future pooling or queued sounds
   }
 
   public playCatch(): void {

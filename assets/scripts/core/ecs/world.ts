@@ -32,6 +32,10 @@ class SimpleWorld<T extends object> {
     }
   }
 
+  public clear(): void {
+    this.entities.length = 0;
+  }
+
   public with(...keys: (keyof T)[]): Query<T> {
     return new Query<T>(this, keys);
   }

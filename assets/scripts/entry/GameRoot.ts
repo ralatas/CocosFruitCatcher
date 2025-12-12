@@ -13,7 +13,7 @@ import {
   AudioClip
 } from "cc";
 import { world } from "../core/ecs/world";
-import { GameState } from "../core/game/GameState";
+import { GameState, GameOverReason } from "../core/game/GameState";
 import { DefaultGameConfig } from "../core/game/GameConfig";
 import { FruitKind, Entity } from "../core/ecs/components";
 import { BasketControlSystem } from "../core/ecs/systems/BasketControlSystem";
@@ -24,6 +24,7 @@ import { CollisionSystem } from "../core/ecs/systems/CollisionSystem";
 import { CleanupSystem } from "../core/ecs/systems/CleanupSystem";
 import { TimerSystem } from "../core/ecs/systems/TimerSystem";
 import { SoundSystem } from "../core/ecs/systems/SoundSystem";
+import { GameOverUI } from "../ui/GameOverUI";
 
 const { ccclass, property } = _decorator;
 
@@ -65,6 +66,9 @@ export class GameRoot extends Component {
   @property(AudioClip)
   public hazardSfx: AudioClip | null = null;
 
+  @property(GameOverUI)
+  public gameOverUI: GameOverUI | null = null;
+
   private _gameState!: GameState;
 
   private _basketSystem!: BasketControlSystem;
@@ -79,6 +83,7 @@ export class GameRoot extends Component {
   private _soundSystem!: SoundSystem;
 
   public onLoad(): void {
+    world.clear();
     this._gameState = new GameState(DefaultGameConfig);
 
     if (this.scoreLabel) {
@@ -107,8 +112,8 @@ export class GameRoot extends Component {
       }
     };
 
-    this._gameState.onGameOver = () => {
-      // TODO: показать UI Game Over
+    this._gameState.onGameOver = (reason) => {
+      this.showGameOverOverlay(reason);
     };
 
     this._basketSystem = new BasketControlSystem();
@@ -145,6 +150,7 @@ export class GameRoot extends Component {
     this.spawnBasket();
     this.registerInput();
     this.setupBackgroundMusic();
+    this.gameOverUI?.init();
   }
 
   public update(dt: number): void {
@@ -209,6 +215,10 @@ export class GameRoot extends Component {
 
   private playCatchSfx(): void {
     this._soundSystem?.playCatch();
+  }
+
+  private showGameOverOverlay(reason: GameOverReason): void {
+    this.gameOverUI?.show(reason, this._gameState.lives);
   }
 
   private spawnBasket(): void {
