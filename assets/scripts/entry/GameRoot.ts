@@ -23,6 +23,9 @@ import { CollisionSystem } from "../core/ecs/systems/CollisionSystem";
 import { CleanupSystem } from "../core/ecs/systems/CleanupSystem";
 import { TimerSystem } from "../core/ecs/systems/TimerSystem";
 import { SoundSystem } from "../core/ecs/systems/SoundSystem";
+import { ScoreSystem } from "../core/ecs/systems/ScoreSystem";
+import { LivesSystem } from "../core/ecs/systems/LivesSystem";
+import { InputSystem } from "../core/ecs/systems/InputSystem";
 import { GameOverUI } from "../ui/GameOverUI";
 
 const { ccclass, property } = _decorator;
@@ -78,29 +81,29 @@ export class GameRoot extends Component {
   private _cleanupSystem!: CleanupSystem;
   private _timerSystem!: TimerSystem;
   private _soundSystem!: SoundSystem;
+  private _scoreSystem!: ScoreSystem;
+  private _inputSystem!: InputSystem;
+  private _livesSystem!: LivesSystem;
 
   public onLoad(): void {
     world.clear();
     this._gameState = new GameState(DefaultGameConfig);
 
-    if (this.scoreLabel) {
-      this.scoreLabel.string = "Score: 0";
-    }
-
-    this.updateLivesLabel(this._gameState.lives);
+    this._scoreSystem = new ScoreSystem(this.scoreLabel);
+    this._scoreSystem.init(this._gameState.score);
+    this._livesSystem = new LivesSystem(this.livesLabel);
+    this._livesSystem.init(this._gameState.lives);
 
     if (this.timerLabel) {
       this.timerLabel.string = `Time: ${this._gameState.timeLeft}`;
     }
 
     this._gameState.onScoreChanged = (score) => {
-      if (this.scoreLabel) {
-        this.scoreLabel.string = `Score: ${score}`;
-      }
+      this._scoreSystem.setScore(score);
     };
 
     this._gameState.onLivesChanged = (lives) => {
-      this.updateLivesLabel(lives);
+      this._livesSystem.setLives(lives);
     };
 
     this._gameState.onTimeChanged = (timeLeft) => {
@@ -146,7 +149,12 @@ export class GameRoot extends Component {
     this._timerSystem = new TimerSystem(this._gameState);
 
     this.spawnBasket();
-    this.registerInput();
+    this._inputSystem = new InputSystem({
+      canvas: this.canvas,
+      basketSystem: this._basketSystem,
+      soundSystem: this._soundSystem,
+    });
+    this._inputSystem.register();
     this.gameOverUI?.init();
   }
 
@@ -166,22 +174,6 @@ export class GameRoot extends Component {
 
   public onDestroy(): void {
     this._soundSystem?.stopBackground();
-  }
-
-  private updateLivesLabel(lives: number): void {
-    if (!this.livesLabel) {
-      return;
-    }
-
-    this.livesLabel.string = `${this.formatLives(lives)}`;
-  }
-
-  private formatLives(lives: number): string {
-    if (lives <= 0) {
-      return "-";
-    }
-
-    return Array.from({ length: lives }, () => "♥").join(" ");
   }
 
   private playCatchSfx(): void {
@@ -218,43 +210,4 @@ export class GameRoot extends Component {
     world.add(entity);
   }
 
-  private registerInput(): void {
-    if (!this.canvas) {
-      return;
-    }
-
-    this.canvas.on(Node.EventType.MOUSE_MOVE, (event: EventMouse) => {
-      const uiTransform = this.canvas!.getComponent(UITransform);
-
-      if (!uiTransform) {
-        return;
-      }
-
-      const location = event.getUILocation();
-      const localPos = uiTransform.convertToNodeSpaceAR(new Vec3(location.x, location.y, 0));
-      this._basketSystem.setTargetX(localPos.x);
-      this._soundSystem.startBackgroundIfNeeded();
-    }, this);
-
-    this.canvas.on(Node.EventType.MOUSE_DOWN, () => {
-      this._soundSystem.startBackgroundIfNeeded();
-    }, this);
-
-    this.canvas.on(Node.EventType.TOUCH_MOVE, (event: EventTouch) => {
-      const uiTransform = this.canvas!.getComponent(UITransform);
-
-      if (!uiTransform) {
-        return;
-      }
-
-      const location = event.getUILocation();
-      const localPos = uiTransform.convertToNodeSpaceAR(new Vec3(location.x, location.y, 0));
-      this._basketSystem.setTargetX(localPos.x);
-      this._soundSystem.startBackgroundIfNeeded();
-    }, this);
-
-    this.canvas.on(Node.EventType.TOUCH_START, () => {
-      this._soundSystem.startBackgroundIfNeeded();
-    }, this);
-  }
 }
