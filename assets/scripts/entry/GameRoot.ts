@@ -4,17 +4,12 @@ import {
   Node,
   Prefab,
   Label,
-  UITransform,
-  EventMouse,
-  EventTouch,
-  Vec3,
-  instantiate,
   AudioClip
 } from "cc";
 import { world } from "../core/ecs/world";
 import { GameState, GameOverReason } from "../core/game/GameState";
 import { DefaultGameConfig } from "../core/game/GameConfig";
-import { FruitKind, Entity } from "../core/ecs/components";
+import { FruitKind } from "../core/ecs/components";
 import { BasketControlSystem } from "../core/ecs/systems/BasketControlSystem";
 import { MovementSystem } from "../core/ecs/systems/MovementSystem";
 import { TrajectorySystem } from "../core/ecs/systems/TrajectorySystem";
@@ -22,6 +17,7 @@ import { SpawnSystem } from "../core/ecs/systems/SpawnSystem";
 import { CollisionSystem } from "../core/ecs/systems/CollisionSystem";
 import { CleanupSystem } from "../core/ecs/systems/CleanupSystem";
 import { TimerSystem } from "../core/ecs/systems/TimerSystem";
+import { BasketSpawner } from "../core/ecs/systems/BasketSpawner";
 import { SoundSystem } from "../core/ecs/systems/SoundSystem";
 import { ScoreSystem } from "../core/ecs/systems/ScoreSystem";
 import { LivesSystem } from "../core/ecs/systems/LivesSystem";
@@ -84,6 +80,7 @@ export class GameRoot extends Component {
   private _scoreSystem!: ScoreSystem;
   private _inputSystem!: InputSystem;
   private _livesSystem!: LivesSystem;
+  private _basketSpawner!: BasketSpawner;
 
   public onLoad(): void {
     world.clear();
@@ -134,6 +131,7 @@ export class GameRoot extends Component {
       hazardPrefab: this.hazardPrefab,
       canvasNode: this.canvas
     });
+    this._basketSpawner = new BasketSpawner(this.canvas, this.basketPrefab);
 
     this._soundSystem = new SoundSystem(this, {
       catchClip: this.catchSfx,
@@ -148,7 +146,7 @@ export class GameRoot extends Component {
     this._cleanupSystem = new CleanupSystem();
     this._timerSystem = new TimerSystem(this._gameState);
 
-    this.spawnBasket();
+    this._basketSpawner.spawn();
     this._inputSystem = new InputSystem({
       canvas: this.canvas,
       basketSystem: this._basketSystem,
@@ -182,32 +180,6 @@ export class GameRoot extends Component {
 
   private showGameOverOverlay(reason: GameOverReason): void {
     this.gameOverUI?.show(reason, this._gameState.lives);
-  }
-
-  private spawnBasket(): void {
-    if (!this.canvas || !this.basketPrefab) {
-      return;
-    }
-
-    const inst = instantiate(this.basketPrefab);
-    inst.setParent(this.canvas);
-
-    const canvasTransform = this.canvas.getComponent(UITransform);
-    const height = canvasTransform ? canvasTransform.height : 1280;
-    const y = -height / 2 + 80;
-
-    const position = new Vec3(0, y, 0);
-    inst.setPosition(position);
-
-    const entity: Entity = {
-      node: inst,
-      position,
-      basket: {
-        halfWidth: 80
-      }
-    };
-
-    world.add(entity);
   }
 
 }
