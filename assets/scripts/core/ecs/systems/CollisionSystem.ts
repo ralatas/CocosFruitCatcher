@@ -7,6 +7,7 @@ export class CollisionSystem {
   private readonly _gameState: GameState;
   private readonly _onFruitCaught?: () => void;
   private readonly _soundSystem?: SoundSystem;
+  private _catchStreak = 0;
 
   constructor(
     gameState: GameState,
@@ -40,21 +41,29 @@ export class CollisionSystem {
       const isInsideX = position.x >= basketX - halfWidth && position.x <= basketX + halfWidth;
 
       if (!isAtBasketHeight || !isInsideX) {
+        if (fruit && isAtBasketHeight && !isInsideX) {
+          this._catchStreak = 0;
+        }
         continue;
       }
 
       if (fruit) {
-        this._gameState.addScore(fruit.score);
+        this._catchStreak += 1;
+        const bonus = this._catchStreak > 1 ? this._catchStreak : 0;
+        const totalScore = fruit.score + bonus;
+
+        this._gameState.addScore(totalScore);
         world.remove(entity);
         this._onFruitCaught?.();
         this._soundSystem?.playCatch();
-        this.spawnScorePopup(fruit.score, node.parent, new Vec3(position.x, catchY + 20, 0));
+        this.spawnScorePopup(totalScore, node.parent, new Vec3(position.x, catchY + 20, 0), bonus);
         this.playFruitCatchAnimation(node, new Vec3(basketX, catchY, 0));
         continue;
       }
 
       if (hazard) {
         this._gameState.applyDamage(hazard.damage);
+        this._catchStreak = 0;
         this._soundSystem?.playHazard();
       }
 
@@ -76,7 +85,7 @@ export class CollisionSystem {
       .start();
   }
 
-  private spawnScorePopup(score: number, parent: Node | null, position: Vec3): void {
+  private spawnScorePopup(score: number, parent: Node | null, position: Vec3, bonus: number): void {
     if (!parent) {
       return;
     }
@@ -84,7 +93,7 @@ export class CollisionSystem {
     const popup = new Node("ScorePopup");
     popup.layer = parent.layer;
     const label = popup.addComponent(Label);
-    label.string = `+${score}`;
+    label.string = bonus > 0 ? `+${score} (+${bonus})` : `+${score}`;
     label.color = Color.RED;
     label.fontSize = 32;
     label.lineHeight = 36;

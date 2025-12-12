@@ -84,7 +84,7 @@ export class SpawnSystem {
       },
       trajectory: this.randomTrajectory(),
       lifetime: { value: 0 },
-      destroyWhenBelowY: -canvasHeight / 2 - 100
+      destroyWhenBelowY: -canvasHeight / 2 
     };
 
     world.add(entity);
@@ -109,7 +109,7 @@ export class SpawnSystem {
       },
       trajectory: { kind: TrajectoryKind.Linear },
       lifetime: { value: 0 },
-      destroyWhenBelowY: -canvasHeight / 2 - 100
+      destroyWhenBelowY: -canvasHeight / 2 
     };
 
     world.add(entity);
