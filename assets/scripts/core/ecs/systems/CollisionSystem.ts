@@ -1,12 +1,20 @@
 import { tween, Vec3, Node } from "cc";
 import { world, queries } from "../world";
 import type { GameState } from "../../game/GameState";
+import type { SoundSystem } from "./SoundSystem";
 
 export class CollisionSystem {
   private readonly _gameState: GameState;
+  private readonly _onFruitCaught?: () => void;
+  private readonly _soundSystem?: SoundSystem;
 
-  constructor(gameState: GameState) {
+  constructor(
+    gameState: GameState,
+    options?: { onFruitCaught?: () => void; soundSystem?: SoundSystem }
+  ) {
     this._gameState = gameState;
+    this._onFruitCaught = options?.onFruitCaught;
+    this._soundSystem = options?.soundSystem;
   }
 
   public update(): void {
@@ -38,12 +46,15 @@ export class CollisionSystem {
       if (fruit) {
         this._gameState.addScore(fruit.score);
         world.remove(entity);
+        this._onFruitCaught?.();
+        this._soundSystem?.playCatch();
         this.playFruitCatchAnimation(node, new Vec3(basketX, catchY, 0));
         continue;
       }
 
       if (hazard) {
         this._gameState.applyDamage(hazard.damage);
+        this._soundSystem?.playHazard();
       }
 
       world.remove(entity);

@@ -909,6 +909,14 @@
       "__uuid__": "4145b2c1-116f-482d-bfe8-fa685360703c",
       "__expectedType__": "cc.AudioClip"
     },
+    "catchSfx": {
+      "__uuid__": "c40e65ac-149c-4886-924c-ddeb71d4bedb",
+      "__expectedType__": "cc.AudioClip"
+    },
+    "hazardSfx": {
+      "__uuid__": "6447baaf-b138-4f5a-a3b9-3619055c1858",
+      "__expectedType__": "cc.AudioClip"
+    },
     "_id": "96Bpf62bBCOqKvTcxRDEk+"
   },
   {

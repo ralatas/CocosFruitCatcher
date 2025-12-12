@@ -23,6 +23,7 @@ import { SpawnSystem } from "../core/ecs/systems/SpawnSystem";
 import { CollisionSystem } from "../core/ecs/systems/CollisionSystem";
 import { CleanupSystem } from "../core/ecs/systems/CleanupSystem";
 import { TimerSystem } from "../core/ecs/systems/TimerSystem";
+import { SoundSystem } from "../core/ecs/systems/SoundSystem";
 
 const { ccclass, property } = _decorator;
 
@@ -58,6 +59,12 @@ export class GameRoot extends Component {
   @property(AudioClip)
   public backgroundMusic: AudioClip | null = null;
 
+  @property(AudioClip)
+  public catchSfx: AudioClip | null = null;
+
+  @property(AudioClip)
+  public hazardSfx: AudioClip | null = null;
+
   private _gameState!: GameState;
 
   private _basketSystem!: BasketControlSystem;
@@ -69,6 +76,7 @@ export class GameRoot extends Component {
   private _timerSystem!: TimerSystem;
   private _bgmSource: AudioSource | null = null;
   private _bgmStarted = false;
+  private _soundSystem!: SoundSystem;
 
   public onLoad(): void {
     this._gameState = new GameState(DefaultGameConfig);
@@ -122,7 +130,15 @@ export class GameRoot extends Component {
       canvasNode: this.canvas
     });
 
-    this._collisionSystem = new CollisionSystem(this._gameState);
+    this._soundSystem = new SoundSystem(this, {
+      catchClip: this.catchSfx,
+      hazardClip: this.hazardSfx,
+    });
+
+    this._collisionSystem = new CollisionSystem(this._gameState, {
+      onFruitCaught: () => this.playCatchSfx(),
+      soundSystem: this._soundSystem,
+    });
     this._cleanupSystem = new CleanupSystem();
     this._timerSystem = new TimerSystem(this._gameState);
 
@@ -189,6 +205,10 @@ export class GameRoot extends Component {
 
     this._bgmSource.play();
     this._bgmStarted = true;
+  }
+
+  private playCatchSfx(): void {
+    this._soundSystem?.playCatch();
   }
 
   private spawnBasket(): void {
