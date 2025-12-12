@@ -9,7 +9,6 @@ import {
   EventTouch,
   Vec3,
   instantiate,
-  AudioSource,
   AudioClip
 } from "cc";
 import { world } from "../core/ecs/world";
@@ -78,8 +77,6 @@ export class GameRoot extends Component {
   private _collisionSystem!: CollisionSystem;
   private _cleanupSystem!: CleanupSystem;
   private _timerSystem!: TimerSystem;
-  private _bgmSource: AudioSource | null = null;
-  private _bgmStarted = false;
   private _soundSystem!: SoundSystem;
 
   public onLoad(): void {
@@ -138,6 +135,7 @@ export class GameRoot extends Component {
     this._soundSystem = new SoundSystem(this, {
       catchClip: this.catchSfx,
       hazardClip: this.hazardSfx,
+      backgroundClip: this.backgroundMusic,
     });
 
     this._collisionSystem = new CollisionSystem(this._gameState, {
@@ -149,7 +147,6 @@ export class GameRoot extends Component {
 
     this.spawnBasket();
     this.registerInput();
-    this.setupBackgroundMusic();
     this.gameOverUI?.init();
   }
 
@@ -168,9 +165,7 @@ export class GameRoot extends Component {
   }
 
   public onDestroy(): void {
-    if (this._bgmSource) {
-      this._bgmSource.stop();
-    }
+    this._soundSystem?.stopBackground();
   }
 
   private updateLivesLabel(lives: number): void {
@@ -187,30 +182,6 @@ export class GameRoot extends Component {
     }
 
     return Array.from({ length: lives }, () => "♥").join(" ");
-  }
-
-  private setupBackgroundMusic(): void {
-    if (!this.backgroundMusic) {
-      return;
-    }
-
-    this._bgmSource = this.getComponent(AudioSource) ?? this.addComponent(AudioSource);
-
-    if (!this._bgmSource) {
-      return;
-    }
-
-    this._bgmSource.clip = this.backgroundMusic;
-    this._bgmSource.loop = true;
-  }
-
-  private startBackgroundMusicIfNeeded(): void {
-    if (this._bgmStarted || !this._bgmSource) {
-      return;
-    }
-
-    this._bgmSource.play();
-    this._bgmStarted = true;
   }
 
   private playCatchSfx(): void {
@@ -262,11 +233,11 @@ export class GameRoot extends Component {
       const location = event.getUILocation();
       const localPos = uiTransform.convertToNodeSpaceAR(new Vec3(location.x, location.y, 0));
       this._basketSystem.setTargetX(localPos.x);
-      this.startBackgroundMusicIfNeeded();
+      this._soundSystem.startBackgroundIfNeeded();
     }, this);
 
     this.canvas.on(Node.EventType.MOUSE_DOWN, () => {
-      this.startBackgroundMusicIfNeeded();
+      this._soundSystem.startBackgroundIfNeeded();
     }, this);
 
     this.canvas.on(Node.EventType.TOUCH_MOVE, (event: EventTouch) => {
@@ -279,11 +250,11 @@ export class GameRoot extends Component {
       const location = event.getUILocation();
       const localPos = uiTransform.convertToNodeSpaceAR(new Vec3(location.x, location.y, 0));
       this._basketSystem.setTargetX(localPos.x);
-      this.startBackgroundMusicIfNeeded();
+      this._soundSystem.startBackgroundIfNeeded();
     }, this);
 
     this.canvas.on(Node.EventType.TOUCH_START, () => {
-      this.startBackgroundMusicIfNeeded();
+      this._soundSystem.startBackgroundIfNeeded();
     }, this);
   }
 }
