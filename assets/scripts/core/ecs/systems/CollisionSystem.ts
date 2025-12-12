@@ -1,4 +1,4 @@
-import { tween, Vec3, Node } from "cc";
+import { tween, Vec3, Node, Label, UIOpacity, Color } from "cc";
 import { world, queries } from "../world";
 import type { GameState } from "../../game/GameState";
 import type { SoundSystem } from "./SoundSystem";
@@ -48,6 +48,7 @@ export class CollisionSystem {
         world.remove(entity);
         this._onFruitCaught?.();
         this._soundSystem?.playCatch();
+        this.spawnScorePopup(fruit.score, node.parent, new Vec3(position.x, catchY + 20, 0));
         this.playFruitCatchAnimation(node, new Vec3(basketX, catchY, 0));
         continue;
       }
@@ -72,6 +73,36 @@ export class CollisionSystem {
       .to(0.08, { scale: popScale })
       .to(0.18, { position: finalPosition, scale: shrinkScale })
       .call(() => node.destroy())
+      .start();
+  }
+
+  private spawnScorePopup(score: number, parent: Node | null, position: Vec3): void {
+    if (!parent) {
+      return;
+    }
+
+    const popup = new Node("ScorePopup");
+    popup.layer = parent.layer;
+    const label = popup.addComponent(Label);
+    label.string = `+${score}`;
+    label.color = Color.RED;
+    label.fontSize = 32;
+    label.lineHeight = 36;
+
+    const opacity = popup.addComponent(UIOpacity);
+    opacity.opacity = 255;
+
+    popup.setPosition(position);
+    parent.addChild(popup);
+
+    const targetPos = position.clone().add(new Vec3(0, 80, 0));
+
+    tween(popup)
+      .parallel(
+        tween().to(0.5, { position: targetPos }),
+        tween(opacity).to(0.5, { opacity: 0 })
+      )
+      .call(() => popup.destroy())
       .start();
   }
 }

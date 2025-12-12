@@ -67,6 +67,7 @@ export class SoundSystem {
 
     this._bgmSource.clip = clip;
     this._bgmSource.loop = true;
+    this._bgmSource.volume = 0.2;
   }
 
   public startBackgroundIfNeeded(): void {

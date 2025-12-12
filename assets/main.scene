@@ -1280,7 +1280,7 @@
       "__expectedType__": "cc.AudioClip"
     },
     "hazardSfx": {
-      "__uuid__": "6447baaf-b138-4f5a-a3b9-3619055c1858",
+      "__uuid__": "a5488f91-b841-4ba7-95cc-26c947772d05",
       "__expectedType__": "cc.AudioClip"
     },
     "gameOverUI": {
