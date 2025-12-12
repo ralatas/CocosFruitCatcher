@@ -1,3 +1,4 @@
+import { tween, Vec3, Node } from "cc";
 import { world, queries } from "../world";
 import type { GameState } from "../../game/GameState";
 
@@ -36,14 +37,30 @@ export class CollisionSystem {
 
       if (fruit) {
         this._gameState.addScore(fruit.score);
+        world.remove(entity);
+        this.playFruitCatchAnimation(node, new Vec3(basketX, catchY, 0));
+        continue;
       }
 
       if (hazard) {
         this._gameState.applyDamage(hazard.damage);
       }
 
-      node.destroy();
       world.remove(entity);
+      node.destroy();
     }
+  }
+
+  private playFruitCatchAnimation(node: Node, targetPosition: Vec3): void {
+    const originalScale = node.getScale();
+    const popScale = new Vec3(originalScale.x * 1.15, originalScale.y * 1.15, originalScale.z);
+    const shrinkScale = new Vec3(originalScale.x * 0.1, originalScale.y * 0.1, originalScale.z);
+    const finalPosition = targetPosition.clone();
+
+    tween(node)
+      .to(0.08, { scale: popScale })
+      .to(0.18, { position: finalPosition, scale: shrinkScale })
+      .call(() => node.destroy())
+      .start();
   }
 }
