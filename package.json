@@ -1,0 +1,12 @@
+{
+  "name": "cocos-fruit-catcher-ecs",
+  "version": "1.0.0",
+  "uuid": "3a2c772f-4ccf-44ab-af9a-c51ff16bb8e6",
+  "creator": {
+    "version": "3.8.7"
+  },
+  "description": "Test task: Catch the falling fruits (Cocos Creator 3.8 + TypeScript + ECS via miniplex).",
+  "scripts": {
+    "lint": "echo \"no lint configured\""
+  }
+}
